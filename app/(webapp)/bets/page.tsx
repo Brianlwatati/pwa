@@ -39,7 +39,7 @@ function ResultsList({ results }: { results: string[] }) {
   return (
     <div>
       <h2 className="mt-4 font-bold">Top Combinations</h2>
-      <ul className="grid grid-cols-3 gap-2">
+      <ul className="grid grid-cols-3 gap-2 mt-2">
         {results.map((result, index) => (
           <li key={index} className="border p-1 text-center">
             {result}

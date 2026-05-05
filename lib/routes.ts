@@ -10,4 +10,5 @@ export const routeMeta: Record<string, { breadcrumb: string; title: string }> =
     "/bets": { breadcrumb: "bets", title: "Bets" },
     "/betsb": { breadcrumb: "betsb", title: "Bets B" },
     "/betsc": { breadcrumb: "betsc", title: "Bets C" },
+    "/betsd": { breadcrumb: "betsd", title: "Bets D" },
   };

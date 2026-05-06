@@ -47,6 +47,7 @@ export default function BetGenerator() {
   const [topN, setTopN] = useState(5);
   const [base, setBase] = useState("");
   const [results, setResults] = useState<string[]>([]);
+  const [jsonText, setJsonText] = useState("");
 
   // Add a new default match to the input form.
   const addMatch = () => {
@@ -58,6 +59,38 @@ export default function BetGenerator() {
     const updated = [...oddsList];
     updated[index] = { ...updated[index], [key]: value };
     setOddsList(updated);
+  };
+
+  // Load odds from JSON text.
+  const loadFromJson = () => {
+    try {
+      const parsed = JSON.parse(jsonText);
+      if (
+        Array.isArray(parsed) &&
+        parsed.every(
+          (item) =>
+            typeof item === "object" &&
+            "H" in item &&
+            "D" in item &&
+            "A" in item,
+        )
+      ) {
+        setOddsList(parsed);
+      } else {
+        alert(
+          "Invalid JSON format. Expected array of objects with H, D, A keys.",
+        );
+      }
+    } catch (e) {
+      alert(
+        "Invalid JSON: " + (e instanceof Error ? e.message : "Unknown error"),
+      );
+    }
+  };
+
+  // Export current odds to JSON text.
+  const exportToJson = () => {
+    setJsonText(JSON.stringify(oddsList, null, 2));
   };
 
   // Run the generator pipeline: normalize, sample, score, and select.
@@ -90,6 +123,32 @@ export default function BetGenerator() {
           onChange={(k, value) => updateOdds(i, k, value)}
         />
       ))}
+
+      <div className="flex gap-4 items-start">
+        <div className="flex flex-col">
+          <label className="font-semibold">Odds JSON:</label>
+          <textarea
+            value={jsonText}
+            onChange={(e) => setJsonText(e.target.value)}
+            placeholder='[{"H": 2.0, "D": 3.2, "A": 3.5}]'
+            className="border p-2 w-80 h-32 resize-none"
+          />
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={loadFromJson}
+              className="bg-purple-500 text-white px-3 py-1 rounded text-sm"
+            >
+              Load from JSON
+            </button>
+            <button
+              onClick={exportToJson}
+              className="bg-orange-500 text-white px-3 py-1 rounded text-sm"
+            >
+              Export to JSON
+            </button>
+          </div>
+        </div>
+      </div>
 
       <button
         onClick={addMatch}

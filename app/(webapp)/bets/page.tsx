@@ -59,6 +59,7 @@ export default function Page() {
   const [results, setResults] = useState<string[]>([]);
   const [randomPred, setRandomPred] = useState("");
   const [basePred, setBasePred] = useState("");
+  const [jsonInput, setJsonInput] = useState("");
 
   // ---------------- Event Handlers ----------------
   const addMatch = () => {
@@ -69,6 +70,31 @@ export default function Page() {
     const updated = [...oddsList];
     updated[index][key] = value;
     setOddsList(updated);
+  };
+
+  const addFromJson = () => {
+    try {
+      const parsed: Odds[] = JSON.parse(jsonInput);
+      if (!Array.isArray(parsed)) {
+        throw new Error("JSON must be an array of odds objects");
+      }
+      parsed.forEach((odds) => {
+        if (typeof odds !== "object" || !odds.H || !odds.D || !odds.A) {
+          throw new Error("Each odds object must have H, D, A properties");
+        }
+      });
+      setOddsList([...oddsList, ...parsed]);
+      setJsonInput("");
+    } catch (e: any) {
+      alert("Invalid JSON: " + e.message);
+    }
+  };
+
+  const exportAsJson = () => {
+    const json = JSON.stringify(oddsList, null, 2);
+    navigator.clipboard.writeText(json).then(() => {
+      alert("Odds copied to clipboard as JSON");
+    });
   };
 
   const generate = () => {
@@ -101,6 +127,30 @@ export default function Page() {
       >
         Add Match
       </button>
+
+      <div className="space-y-2">
+        <label className="block font-semibold">Add Odds from JSON:</label>
+        <textarea
+          value={jsonInput}
+          onChange={(e) => setJsonInput(e.target.value)}
+          placeholder='[{"H": 2.0, "D": 3.2, "A": 3.5}, {"H": 1.8, "D": 3.5, "A": 4.0}]'
+          className="border p-2 w-full h-20"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={addFromJson}
+            className="bg-purple-500 text-white px-3 py-1 rounded"
+          >
+            Add from JSON
+          </button>
+          <button
+            onClick={exportAsJson}
+            className="bg-orange-500 text-white px-3 py-1 rounded"
+          >
+            Export as JSON
+          </button>
+        </div>
+      </div>
 
       <div>
         <label>Number of combinations: </label>

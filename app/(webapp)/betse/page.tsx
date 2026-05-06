@@ -64,12 +64,42 @@ export default function Page() {
 
   const [topN, setTopN] = useState(20);
   const [results, setResults] = useState<string[]>([]);
+  const [jsonInput, setJsonInput] = useState("");
 
   // Handle input change
   const updateMatch = (index: number, field: keyof Odds, value: number) => {
     const updated = [...matches];
     updated[index][field] = value;
     setMatches(updated);
+  };
+
+  const addMatch = () => {
+    setMatches([...matches, { H: 2, D: 3, A: 4 }]);
+  };
+
+  const addFromJson = () => {
+    try {
+      const parsed: Odds[] = JSON.parse(jsonInput);
+      if (!Array.isArray(parsed)) {
+        throw new Error("JSON must be an array of odds objects");
+      }
+      parsed.forEach((odds) => {
+        if (typeof odds !== "object" || !odds.H || !odds.D || !odds.A) {
+          throw new Error("Each odds object must have H, D, A properties");
+        }
+      });
+      setMatches([...matches, ...parsed]);
+      setJsonInput("");
+    } catch (e: any) {
+      alert("Invalid JSON: " + e.message);
+    }
+  };
+
+  const exportAsJson = () => {
+    const json = JSON.stringify(matches, null, 2);
+    navigator.clipboard.writeText(json).then(() => {
+      alert("Odds copied to clipboard as JSON");
+    });
   };
 
   // Generate results
@@ -84,59 +114,62 @@ export default function Page() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Double Chance Generator (HD / AD)</h1>
+    <div className="p-6 max-w-3xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">Double Chance Generator (HD / AD)</h1>
 
-      {/* INPUTS */}
-      {matches.map((m, i) => (
-        <div key={i} style={{ marginBottom: 10 }}>
-          <strong>Match {i + 1}:</strong>{" "}
-          <input
-            type="number"
-            step="0.01"
-            value={m.H}
-            onChange={(e) => updateMatch(i, "H", Number(e.target.value))}
-          />
-          {" H "}
-          <input
-            type="number"
-            step="0.01"
-            value={m.D}
-            onChange={(e) => updateMatch(i, "D", Number(e.target.value))}
-          />
-          {" D "}
-          <input
-            type="number"
-            step="0.01"
-            value={m.A}
-            onChange={(e) => updateMatch(i, "A", Number(e.target.value))}
-          />
-          {" A"}
-        </div>
+      {matches.map((odds, index) => (
+        <OddsRow key={index} index={index} odds={odds} onChange={updateMatch} />
       ))}
 
-      {/* SETTINGS */}
-      <div style={{ marginTop: 20 }}>
-        Top N:
+      <button
+        onClick={addMatch}
+        className="bg-blue-500 text-white px-3 py-1 rounded"
+      >
+        Add Match
+      </button>
+
+      <div className="space-y-2">
+        <label className="block font-semibold">Add Odds from JSON:</label>
+        <textarea
+          value={jsonInput}
+          onChange={(e) => setJsonInput(e.target.value)}
+          placeholder='[{"H": 2.0, "D": 3.2, "A": 3.5}, {"H": 1.8, "D": 3.5, "A": 4.0}]'
+          className="border p-2 w-full h-20"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={addFromJson}
+            className="bg-purple-500 text-white px-3 py-1 rounded"
+          >
+            Add from JSON
+          </button>
+          <button
+            onClick={exportAsJson}
+            className="bg-orange-500 text-white px-3 py-1 rounded"
+          >
+            Export as JSON
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label>Number of combinations: </label>
         <input
           type="number"
           value={topN}
-          onChange={(e) => setTopN(Number(e.target.value))}
+          onChange={(e) => setTopN(parseInt(e.target.value))}
+          className="border p-1 w-20"
         />
       </div>
 
-      {/* BUTTON */}
-      <button onClick={generate} style={{ marginTop: 20 }}>
+      <button
+        onClick={generate}
+        className="bg-green-600 text-white px-4 py-2 rounded"
+      >
         Generate
       </button>
 
-      {/* OUTPUT */}
-      <div style={{ marginTop: 20 }}>
-        <h3>Results:</h3>
-        {results.map((r, i) => (
-          <div key={i}>{r}</div>
-        ))}
-      </div>
+      {results.length > 0 && <ResultsList results={results} />}
     </div>
   );
 }

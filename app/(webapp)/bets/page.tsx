@@ -10,6 +10,7 @@ import {
   randomPrediction,
   rankCombinations,
 } from "./utils";
+import { generateBetPDF } from "./pdfUtils";
 
 function OddsRow({
   index,
@@ -110,80 +111,12 @@ export default function Page() {
   };
 
   const saveAsPDF = () => {
-    const doc = new jsPDF();
-    let currentY = 10;
-
-    // Title
-    doc.setFontSize(16);
-    doc.text("Betting Combinations Report", 10, currentY);
-    currentY += 15;
-
-    // Odds table
-    doc.setFontSize(12);
-    const oddsData = oddsList.map((odds, i) => [i + 1, odds.H, odds.D, odds.A]);
-    (doc as any).autoTable({
-      head: [["Match", "H", "D", "A"]],
-      body: oddsData,
-      startY: currentY,
-      didDrawPage: (data: any) => {
-        currentY = data.cursor.y + 5;
-      },
+    generateBetPDF({
+      title: "Betting Combinations Report",
+      oddsList,
+      results,
+      actualOutcomes,
     });
-    currentY = (doc as any).lastAutoTable.finalY + 10;
-
-    // Top combinations
-    doc.setFontSize(12);
-    doc.text("Top Combinations:", 10, currentY);
-    currentY += 8;
-
-    // Create combinations table with multiple columns for better page usage
-    const comboData = [];
-    for (let i = 0; i < results.length; i += 3) {
-      const row = [];
-      for (let j = 0; j < 3; j++) {
-        if (i + j < results.length) {
-          row.push(`${i + j + 1}. ${results[i + j]}`);
-        } else {
-          row.push("");
-        }
-      }
-      comboData.push(row);
-    }
-
-    (doc as any).autoTable({
-      head: [["Combo 1", "Combo 2", "Combo 3"]],
-      body: comboData,
-      startY: currentY,
-      didDrawPage: (data: any) => {
-        currentY = data.cursor.y + 5;
-      },
-    });
-    currentY = (doc as any).lastAutoTable.finalY + 10;
-
-    // Actual outcomes table with 4 columns
-    if (actualOutcomes.some((o) => o !== "")) {
-      doc.setFontSize(12);
-      doc.text("Actual Outcomes:", 10, currentY);
-      currentY += 8;
-
-      const outcomesData = oddsList.map((odds, i) => [
-        i + 1,
-        odds.H,
-        odds.D,
-        actualOutcomes[i] || "Not set",
-      ]);
-
-      (doc as any).autoTable({
-        head: [["Match", "H", "D", "Actual"]],
-        body: outcomesData,
-        startY: currentY,
-        didDrawPage: (data: any) => {
-          currentY = data.cursor.y + 5;
-        },
-      });
-    }
-
-    doc.save("bet-report.pdf");
   };
 
   const addFromJson = () => {

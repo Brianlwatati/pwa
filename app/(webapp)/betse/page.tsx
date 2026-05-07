@@ -8,6 +8,7 @@ import {
   rankCombinations,
   toDoubleChancePairs,
 } from "./BetseUtils";
+import { generateBetPDF } from "../bets/pdfUtils";
 
 // =============================
 // COMPONENT
@@ -121,6 +122,14 @@ export default function Page() {
     setResults(paired);
   };
 
+  const saveAsPDF = () => {
+    generateBetPDF({
+      title: "Double Chance Generator Report",
+      oddsList: matches,
+      results,
+    });
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Double Chance Generator (HD / AD)</h1>
@@ -183,7 +192,18 @@ export default function Page() {
         Generate
       </button>
 
-      {results.length > 0 && <ResultsList results={results} />}
+      {results.length > 0 && (
+        <div>
+          <ResultsList results={results} />
+
+          <button
+            onClick={saveAsPDF}
+            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+          >
+            Save as PDF
+          </button>
+        </div>
+      )}
     </div>
   );
 }

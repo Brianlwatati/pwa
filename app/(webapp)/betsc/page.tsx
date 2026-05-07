@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { generateBetPDF } from "../bets/pdfUtils";
 
 type ResultsMap = Record<number, number>;
 
@@ -67,6 +68,15 @@ export default function Page() {
 
     setResults(results);
     setCombinations(list);
+  };
+
+  const saveAsPDF = () => {
+    generateBetPDF({
+      title: "Jackpot Simulation Report",
+      jackpot,
+      resultsMap: results,
+      combinations,
+    });
   };
 
   return (
@@ -136,6 +146,13 @@ export default function Page() {
             </div>
           ))}
         </div>
+
+        <button
+          onClick={saveAsPDF}
+          className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+        >
+          Save as PDF
+        </button>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   scoreCombos,
   selectDiverseTop,
 } from "./betUtils";
+import { generateBetPDF } from "../bets/pdfUtils";
 
 const CHOICES = ["H", "D", "A"] as const;
 
@@ -109,6 +110,15 @@ export default function BetGenerator() {
     }
   };
 
+  const saveAsPDF = () => {
+    generateBetPDF({
+      title: "Smart Betting Generator Report",
+      oddsList,
+      results,
+      base,
+    });
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">
@@ -200,6 +210,13 @@ export default function BetGenerator() {
               </div>
             ))}
           </div>
+
+          <button
+            onClick={saveAsPDF}
+            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+          >
+            Save as PDF
+          </button>
         </div>
       )}
     </div>

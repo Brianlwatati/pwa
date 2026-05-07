@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import {
   CHOICES,
   Odds,
@@ -50,6 +52,34 @@ function ResultsList({ results }: { results: string[] }) {
   );
 }
 
+function ActualOutcomesRow({
+  index,
+  outcome,
+  onChange,
+}: {
+  index: number;
+  outcome: string;
+  onChange: (index: number, value: string) => void;
+}) {
+  return (
+    <div className="flex gap-2 items-center">
+      <span>Match {index + 1} Actual:</span>
+      <select
+        value={outcome}
+        onChange={(e) => onChange(index, e.target.value)}
+        className="border p-1"
+      >
+        <option value="">Select</option>
+        {CHOICES.map((choice) => (
+          <option key={choice} value={choice}>
+            {choice}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function Page() {
   // ---------------- State ----------------
   const [oddsList, setOddsList] = useState<Odds[]>([
@@ -60,6 +90,7 @@ export default function Page() {
   const [randomPred, setRandomPred] = useState("");
   const [basePred, setBasePred] = useState("");
   const [jsonInput, setJsonInput] = useState("");
+  const [actualOutcomes, setActualOutcomes] = useState<string[]>([]);
 
   // ---------------- Event Handlers ----------------
   const addMatch = () => {
@@ -70,6 +101,89 @@ export default function Page() {
     const updated = [...oddsList];
     updated[index][key] = value;
     setOddsList(updated);
+  };
+
+  const updateActualOutcome = (index: number, value: string) => {
+    const updated = [...actualOutcomes];
+    updated[index] = value;
+    setActualOutcomes(updated);
+  };
+
+  const saveAsPDF = () => {
+    const doc = new jsPDF();
+    let currentY = 10;
+
+    // Title
+    doc.setFontSize(16);
+    doc.text("Betting Combinations Report", 10, currentY);
+    currentY += 15;
+
+    // Odds table
+    doc.setFontSize(12);
+    const oddsData = oddsList.map((odds, i) => [i + 1, odds.H, odds.D, odds.A]);
+    (doc as any).autoTable({
+      head: [["Match", "H", "D", "A"]],
+      body: oddsData,
+      startY: currentY,
+      didDrawPage: (data: any) => {
+        currentY = data.cursor.y + 5;
+      },
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 10;
+
+    // Top combinations
+    doc.setFontSize(12);
+    doc.text("Top Combinations:", 10, currentY);
+    currentY += 8;
+
+    // Create combinations table with multiple columns for better page usage
+    const comboData = [];
+    for (let i = 0; i < results.length; i += 3) {
+      const row = [];
+      for (let j = 0; j < 3; j++) {
+        if (i + j < results.length) {
+          row.push(`${i + j + 1}. ${results[i + j]}`);
+        } else {
+          row.push("");
+        }
+      }
+      comboData.push(row);
+    }
+
+    (doc as any).autoTable({
+      head: [["Combo 1", "Combo 2", "Combo 3"]],
+      body: comboData,
+      startY: currentY,
+      didDrawPage: (data: any) => {
+        currentY = data.cursor.y + 5;
+      },
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 10;
+
+    // Actual outcomes table with 4 columns
+    if (actualOutcomes.some((o) => o !== "")) {
+      doc.setFontSize(12);
+      doc.text("Actual Outcomes:", 10, currentY);
+      currentY += 8;
+
+      const outcomesData = oddsList.map((odds, i) => [
+        i + 1,
+        odds.H,
+        odds.D,
+        actualOutcomes[i] || "Not set",
+      ]);
+
+      (doc as any).autoTable({
+        head: [["Match", "H", "D", "Actual"]],
+        body: outcomesData,
+        startY: currentY,
+        didDrawPage: (data: any) => {
+          currentY = data.cursor.y + 5;
+        },
+      });
+    }
+
+    doc.save("bet-report.pdf");
   };
 
   const addFromJson = () => {
@@ -107,6 +221,7 @@ export default function Page() {
       setRandomPred(randomP);
       setBasePred(base);
       setResults(ranked);
+      setActualOutcomes(new Array(oddsList.length).fill(""));
     } catch (e: any) {
       alert(e.message);
     }
@@ -178,6 +293,25 @@ export default function Page() {
             <strong>Base Pattern:</strong> {basePred}
           </p>
           <ResultsList results={results} />
+
+          <div className="mt-4">
+            <h2 className="font-bold">Actual Outcomes</h2>
+            {actualOutcomes.map((outcome, index) => (
+              <ActualOutcomesRow
+                key={index}
+                index={index}
+                outcome={outcome}
+                onChange={updateActualOutcome}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={saveAsPDF}
+            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+          >
+            Save as PDF
+          </button>
         </div>
       )}
     </div>

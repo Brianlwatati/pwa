@@ -17,13 +17,15 @@ function OddsRow({
   index,
   odds,
   onChange,
+  onRemove,
 }: {
   index: number;
   odds: Odds;
   onChange: (index: number, key: keyof Odds, value: number) => void;
+  onRemove: (index: number) => void;
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
       <span>Match {index + 1}</span>
       {CHOICES.map((k: keyof Odds) => (
         <input
@@ -35,6 +37,13 @@ function OddsRow({
           className="border p-1 w-20"
         />
       ))}
+      <button
+        onClick={() => onRemove(index)}
+        className="bg-red-500 text-white px-2 py-1 rounded"
+        type="button"
+      >
+        Remove
+      </button>
     </div>
   );
 }
@@ -55,12 +64,7 @@ function ResultsList({ results }: { results: string[] }) {
 }
 
 export default function Page() {
-  const [matches, setMatches] = useState<Odds[]>([
-    { H: 2.1, D: 3.2, A: 3.5 },
-    { H: 1.8, D: 3.5, A: 4.2 },
-    { H: 2.5, D: 3.0, A: 2.8 },
-    { H: 2.0, D: 3.3, A: 3.6 },
-  ]);
+  const [matches, setMatches] = useState<Odds[]>([]);
 
   const [topN, setTopN] = useState(20);
   const [results, setResults] = useState<string[]>([]);
@@ -75,6 +79,10 @@ export default function Page() {
 
   const addMatch = () => {
     setMatches([...matches, { H: 2, D: 3, A: 4 }]);
+  };
+
+  const removeMatch = (index: number) => {
+    setMatches(matches.filter((_, i) => i !== index));
   };
 
   const addFromJson = () => {
@@ -118,7 +126,13 @@ export default function Page() {
       <h1 className="text-2xl font-bold">Double Chance Generator (HD / AD)</h1>
 
       {matches.map((odds, index) => (
-        <OddsRow key={index} index={index} odds={odds} onChange={updateMatch} />
+        <OddsRow
+          key={index}
+          index={index}
+          odds={odds}
+          onChange={updateMatch}
+          onRemove={removeMatch}
+        />
       ))}
 
       <button
